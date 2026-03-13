@@ -1,0 +1,62 @@
+const { Schema, Types, models, model } = require("mongoose");
+const bcrypt = require("bcryptjs");
+
+const userSchema = new Schema(
+  {
+    fullName: {
+      type: String,
+      // required: true,
+      index: true,
+      lowercase: true
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+    votedFor: {
+      type: Types.ObjectId,
+      ref: "Candidate",
+    },
+    profileImage: {
+      type: String,
+      default: "",
+    },
+    dob: {
+      type: String,
+      default: "",
+    },
+    voterId: {
+      type: String,
+      default: "",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+});
+
+userSchema.methods.comparePassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
+
+userSchema.methods.gene
+
+const User = models.User || model("User", userSchema);
+
+module.exports = User;
