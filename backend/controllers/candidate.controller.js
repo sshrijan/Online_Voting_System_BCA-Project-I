@@ -178,17 +178,23 @@ exports.voteForCandidate = async (req, res) => {
             });
         }
 
-        // Check if election timer has ended
+        // Check if election timer has been configured at all
         const settings = await Settings.findOne();
-        if (settings && settings.electionEndDate) {
-            const now = new Date();
-            const endDate = new Date(settings.electionEndDate);
-            if (now > endDate) {
-                return res.status(400).json({ 
-                    success: false,
-                    error: "Election time has ended. You can no longer vote." 
-                });
-            }
+        if (!settings || !settings.electionEndDate) {
+            return res.status(400).json({ 
+                success: false,
+                error: "Voting has not started yet." 
+            });
+        }
+
+        // Check if election timer has ended
+        const now = new Date();
+        const endDate = new Date(settings.electionEndDate);
+        if (now > endDate) {
+            return res.status(400).json({ 
+                success: false,
+                error: "Election time has ended. You can no longer vote." 
+            });
         }
 
         // Update candidate vote count
