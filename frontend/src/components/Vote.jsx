@@ -28,6 +28,10 @@ const Vote = () => {
   const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
   const [electionEndDate, setElectionEndDate] = useState(null);
   const [activeTab, setActiveTab] = useState("castVote");
+  const [editProfileErrors, setEditProfileErrors] = useState({});
+  const [editProfileTouched, setEditProfileTouched] = useState({});
+  const [passwordErrors, setPasswordErrors] = useState({});
+  const [passwordTouched, setPasswordTouched] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -83,8 +87,135 @@ const Vote = () => {
     }
   }, [user]);
 
+  // Validation functions
+  const validateEditProfileName = (name) => {
+    if (!name) return "Full name is required";
+    if (name.trim().length < 3) return "Name must be at least 3 characters";
+    if (!/^[a-zA-Z\s]+$/.test(name)) return "Name can only contain letters and spaces";
+    return "";
+  };
+
+  const validateEditProfileDob = (dob) => {
+    if (!dob) return "Date of birth is required (BS: YYYY-MM-DD)";
+    const bsDateRegex = /^(\d{4})-(\d{2})-(\d{2})$/;
+    const match = dob.match(bsDateRegex);
+    if (!match) return "Use format YYYY-MM-DD (e.g. 2058-06-15)";
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const day = parseInt(match[3], 10);
+    if (year < 1970 || year > 2065) return "BS year must be between 1970 and 2065";
+    if (month < 1 || month > 12) return "Month must be between 01 and 12";
+    if (day < 1 || day > 32) return "Day must be between 01 and 32";
+    const currentBsYear = new Date().getFullYear() + 56;
+    if (year > currentBsYear - 18) return "You must be at least 18 years old";
+    return "";
+  };
+
+  const validateEditProfileVoterId = (voterId) => {
+    if (!voterId) return "Voter ID is required";
+    if (!/^\d{8}$/.test(voterId)) return "Voter ID must be exactly 8 digits";
+    return "";
+  };
+
+  const validateCurrentPassword = (password) => {
+    if (!password) return "Current password is required";
+    return "";
+  };
+
+  const validateNewPassword = (password) => {
+    if (!password) return "New password is required";
+    if (password.length < 8) return "Password must be at least 8 characters";
+    if (!/[A-Z]/.test(password)) return "Must include uppercase letter";
+    if (!/[a-z]/.test(password)) return "Must include lowercase letter";
+    if (!/\d/.test(password)) return "Must include a number";
+    if (!/\W/.test(password)) return "Must include a special character";
+    return "";
+  };
+
+  const validateConfirmPassword = (confirmPassword, newPassword) => {
+    if (!confirmPassword) return "Please confirm your password";
+    if (confirmPassword !== newPassword) return "Passwords do not match";
+    return "";
+  };
+
+  const handleEditProfileChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "dob") {
+      const digits = value.replace(/\D/g, "").slice(0, 8);
+      let formatted = digits;
+      if (digits.length <= 4) {
+        formatted = digits;
+      } else if (digits.length <= 6) {
+        formatted = digits.slice(0, 4) + "-" + digits.slice(4);
+      } else {
+        formatted = digits.slice(0, 4) + "-" + digits.slice(4, 6) + "-" + digits.slice(6);
+      }
+      setEditFormData({ ...editFormData, [name]: formatted });
+    } else {
+      setEditFormData({ ...editFormData, [name]: value });
+    }
+
+    if (editProfileTouched[name]) {
+      let error = "";
+      if (name === "fullName") error = validateEditProfileName(value);
+      else if (name === "dob") error = validateEditProfileDob(value);
+      else if (name === "voterId") error = validateEditProfileVoterId(value);
+      setEditProfileErrors({ ...editProfileErrors, [name]: error });
+    }
+  };
+
+  const handleEditProfileBlur = (e) => {
+    const { name, value } = e.target;
+    setEditProfileTouched({ ...editProfileTouched, [name]: true });
+    let error = "";
+    if (name === "fullName") error = validateEditProfileName(value);
+    else if (name === "dob") error = validateEditProfileDob(value);
+    else if (name === "voterId") error = validateEditProfileVoterId(value);
+    setEditProfileErrors({ ...editProfileErrors, [name]: error });
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordFormData({ ...passwordFormData, [name]: value });
+
+    if (passwordTouched[name]) {
+      let error = "";
+      if (name === "currentPassword") error = validateCurrentPassword(value);
+      else if (name === "newPassword") error = validateNewPassword(value);
+      else if (name === "confirmNewPassword") error = validateConfirmPassword(value, passwordFormData.newPassword);
+      setPasswordErrors({ ...passwordErrors, [name]: error });
+    }
+  };
+
+  const handlePasswordBlur = (e) => {
+    const { name, value } = e.target;
+    setPasswordTouched({ ...passwordTouched, [name]: true });
+    let error = "";
+    if (name === "currentPassword") error = validateCurrentPassword(value);
+    else if (name === "newPassword") error = validateNewPassword(value);
+    else if (name === "confirmNewPassword") error = validateConfirmPassword(value, passwordFormData.newPassword);
+    setPasswordErrors({ ...passwordErrors, [name]: error });
+  };
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    const fullNameError = validateEditProfileName(editFormData.fullName);
+    const dobError = validateEditProfileDob(editFormData.dob);
+    const voterIdError = validateEditProfileVoterId(editFormData.voterId);
+
+    setEditProfileErrors({
+      fullName: fullNameError,
+      dob: dobError,
+      voterId: voterIdError
+    });
+    setEditProfileTouched({
+      fullName: true,
+      dob: true,
+      voterId: true
+    });
+
+    if (fullNameError || dobError || voterIdError) return;
+
     setModalLoading(true);
     setModalError("");
     setModalSuccess("");
@@ -129,15 +260,22 @@ const Vote = () => {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    if (passwordFormData.newPassword !== passwordFormData.confirmNewPassword) {
-      setModalError("Passwords do not match");
-      return;
-    }
+    const currentPasswordError = validateCurrentPassword(passwordFormData.currentPassword);
+    const newPasswordError = validateNewPassword(passwordFormData.newPassword);
+    const confirmPasswordError = validateConfirmPassword(passwordFormData.confirmNewPassword, passwordFormData.newPassword);
 
-    if (!validatePassword(passwordFormData.newPassword)) {
-      setModalError(t.passwordValidationMsg);
-      return;
-    }
+    setPasswordErrors({
+      currentPassword: currentPasswordError,
+      newPassword: newPasswordError,
+      confirmNewPassword: confirmPasswordError
+    });
+    setPasswordTouched({
+      currentPassword: true,
+      newPassword: true,
+      confirmNewPassword: true
+    });
+
+    if (currentPasswordError || newPasswordError || confirmPasswordError) return;
 
     setModalLoading(true);
     setModalError("");
@@ -733,8 +871,8 @@ const Vote = () => {
                 </div>
                 <form onSubmit={handleUpdateProfile}>
                   <div className="modal-body p-4">
-                    {modalError && <div className="alert alert-danger py-2 small">{modalError}</div>}
-                    {modalSuccess && <div className="alert alert-success py-2 small">{modalSuccess}</div>}
+                    {modalError && <div className="alert alert-danger py-2 small"><i className="bi bi-exclamation-circle me-1"></i>{modalError}</div>}
+                    {modalSuccess && <div className="alert alert-success py-2 small"><i className="bi bi-check-circle me-1"></i>{modalSuccess}</div>}
 
                     <div className="mb-3 text-center">
                       <div className="position-relative d-inline-block">
@@ -750,26 +888,38 @@ const Vote = () => {
 
                     <div className="mb-3">
                       <label className="form-label small fw-bold text-app-muted">{t.fullNameLabel}</label>
-                      <input type="text" className="form-control rounded-pill bg-light border-0 px-4"
+                      <input type="text" className={`form-control rounded-pill bg-light border-0 px-4 ${editProfileErrors.fullName && editProfileTouched.fullName ? 'border-danger border' : ''}`}
                         placeholder={t.fullNamePlaceholder}
-                        value={editFormData.fullName} onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value })} />
+                        value={editFormData.fullName} 
+                        onChange={handleEditProfileChange}
+                        onBlur={handleEditProfileBlur}
+                        name="fullName" />
+                      {editProfileErrors.fullName && editProfileTouched.fullName && <span className="text-danger small mt-1 d-block"><i className="bi bi-exclamation-circle me-1"></i>{editProfileErrors.fullName}</span>}
                     </div>
                     <div className="mb-3">
                       <label className="form-label small fw-bold text-app-muted">{t.dobLabel}</label>
-                      <input type="text" className="form-control rounded-pill bg-light border-0 px-4"
+                      <input type="text" className={`form-control rounded-pill bg-light border-0 px-4 ${editProfileErrors.dob && editProfileTouched.dob ? 'border-danger border' : ''}`}
                         placeholder={t.dobPlaceholder}
-                        value={editFormData.dob} onChange={(e) => setEditFormData({ ...editFormData, dob: e.target.value })} />
+                        value={editFormData.dob} 
+                        onChange={handleEditProfileChange}
+                        onBlur={handleEditProfileBlur}
+                        name="dob" />
+                      {editProfileErrors.dob && editProfileTouched.dob && <span className="text-danger small mt-1 d-block"><i className="bi bi-exclamation-circle me-1"></i>{editProfileErrors.dob}</span>}
                     </div>
                     <div className="mb-0">
                       <label className="form-label small fw-bold text-app-muted">{t.voterIdLabel}</label>
-                      <input type="text" className="form-control rounded-pill bg-light border-0 px-4"
+                      <input type="text" className={`form-control rounded-pill bg-light border-0 px-4 ${editProfileErrors.voterId && editProfileTouched.voterId ? 'border-danger border' : ''}`}
                         placeholder={t.voterIdPlaceholder}
-                        value={editFormData.voterId} onChange={(e) => setEditFormData({ ...editFormData, voterId: e.target.value })} />
+                        value={editFormData.voterId} 
+                        onChange={handleEditProfileChange}
+                        onBlur={handleEditProfileBlur}
+                        name="voterId" />
+                      {editProfileErrors.voterId && editProfileTouched.voterId && <span className="text-danger small mt-1 d-block"><i className="bi bi-exclamation-circle me-1"></i>{editProfileErrors.voterId}</span>}
                     </div>
                   </div>
                   <div className="modal-footer border-top p-4 d-flex gap-2">
                     <button type="button" className="btn btn-light rounded-pill px-4 flex-grow-1" onClick={() => setShowEditProfileModal(false)}>{t.cancel}</button>
-                    <button type="submit" className="btn btn-primary rounded-pill px-4 flex-grow-1" disabled={modalLoading}>
+                    <button type="submit" className="btn btn-primary rounded-pill px-4 flex-grow-1" disabled={modalLoading || Object.values(editProfileErrors).some(e => e)}>
                       {modalLoading ? "..." : t.saveChanges}
                     </button>
                   </div>
@@ -790,34 +940,40 @@ const Vote = () => {
                 </div>
                 <form onSubmit={handleChangePassword}>
                   <div className="modal-body p-4">
-                    {modalError && <div className="alert alert-danger py-2 small">{modalError}</div>}
-                    {modalSuccess && <div className="alert alert-success py-2 small">{modalSuccess}</div>}
+                    {modalError && <div className="alert alert-danger py-2 small"><i className="bi bi-exclamation-circle me-1"></i>{modalError}</div>}
+                    {modalSuccess && <div className="alert alert-success py-2 small"><i className="bi bi-check-circle me-1"></i>{modalSuccess}</div>}
 
                     <div className="mb-3">
                       <label className="form-label small fw-bold text-app-muted">{t.currentPassword}</label>
                       <div className="position-relative">
-                        <input type={showPasswords.current ? "text" : "password"} name="currentPassword" required
-                          className="form-control rounded-pill bg-light border-0 px-4 pe-5"
+                        <input type={showPasswords.current ? "text" : "password"} name="currentPassword"
+                          className={`form-control rounded-pill bg-light border-0 px-4 pe-5 ${passwordErrors.currentPassword && passwordTouched.currentPassword ? 'border-danger border' : ''}`}
                           placeholder="••••••••"
-                          value={passwordFormData.currentPassword} onChange={(e) => setPasswordFormData({ ...passwordFormData, currentPassword: e.target.value })} />
+                          value={passwordFormData.currentPassword} 
+                          onChange={handlePasswordChange}
+                          onBlur={handlePasswordBlur} />
                         <button type="button" className="btn position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent text-muted me-2"
                           onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}>
                           <i className={`bi ${showPasswords.current ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
                         </button>
                       </div>
+                      {passwordErrors.currentPassword && passwordTouched.currentPassword && <span className="text-danger small mt-1 d-block"><i className="bi bi-exclamation-circle me-1"></i>{passwordErrors.currentPassword}</span>}
                     </div>
                     <div className="mb-3">
                       <label className="form-label small fw-bold text-app-muted">{t.newPassword}</label>
                       <div className="position-relative">
-                        <input type={showPasswords.new ? "text" : "password"} name="newPassword" required
-                          className="form-control rounded-pill bg-light border-0 px-4 pe-5"
+                        <input type={showPasswords.new ? "text" : "password"} name="newPassword"
+                          className={`form-control rounded-pill bg-light border-0 px-4 pe-5 ${passwordErrors.newPassword && passwordTouched.newPassword ? 'border-danger border' : ''}`}
                           placeholder="••••••••"
-                          value={passwordFormData.newPassword} onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })} />
+                          value={passwordFormData.newPassword} 
+                          onChange={handlePasswordChange}
+                          onBlur={handlePasswordBlur} />
                         <button type="button" className="btn position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent text-muted me-2"
                           onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}>
                           <i className={`bi ${showPasswords.new ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
                         </button>
                       </div>
+                      {passwordErrors.newPassword && passwordTouched.newPassword && <span className="text-danger small mt-1 d-block"><i className="bi bi-exclamation-circle me-1"></i>{passwordErrors.newPassword}</span>}
                       <div className="mt-2" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         <i className="bi bi-info-circle me-1"></i>
                         {t.passwordValidationMsg}
@@ -826,20 +982,23 @@ const Vote = () => {
                     <div className="mb-0">
                       <label className="form-label small fw-bold text-app-muted">{t.confirmNewPassword}</label>
                       <div className="position-relative">
-                        <input type={showPasswords.confirm ? "text" : "password"} name="confirmNewPassword" required
-                          className="form-control rounded-pill bg-light border-0 px-4 pe-5"
+                        <input type={showPasswords.confirm ? "text" : "password"} name="confirmNewPassword"
+                          className={`form-control rounded-pill bg-light border-0 px-4 pe-5 ${passwordErrors.confirmNewPassword && passwordTouched.confirmNewPassword ? 'border-danger border' : ''}`}
                           placeholder="••••••••"
-                          value={passwordFormData.confirmNewPassword} onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmNewPassword: e.target.value })} />
+                          value={passwordFormData.confirmNewPassword} 
+                          onChange={handlePasswordChange}
+                          onBlur={handlePasswordBlur} />
                         <button type="button" className="btn position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent text-muted me-2"
                           onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}>
                           <i className={`bi ${showPasswords.confirm ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
                         </button>
                       </div>
+                      {passwordErrors.confirmNewPassword && passwordTouched.confirmNewPassword && <span className="text-danger small mt-1 d-block"><i className="bi bi-exclamation-circle me-1"></i>{passwordErrors.confirmNewPassword}</span>}
                     </div>
                   </div>
                   <div className="modal-footer border-top p-4 d-flex gap-2">
                     <button type="button" className="btn btn-light rounded-pill px-4 flex-grow-1" onClick={() => setShowChangePasswordModal(false)}>{t.cancel}</button>
-                    <button type="submit" className="btn btn-primary rounded-pill px-4 flex-grow-1" disabled={modalLoading}>
+                    <button type="submit" className="btn btn-primary rounded-pill px-4 flex-grow-1" disabled={modalLoading || Object.values(passwordErrors).some(e => e)}>
                       {modalLoading ? "..." : t.saveChanges}
                     </button>
                   </div>

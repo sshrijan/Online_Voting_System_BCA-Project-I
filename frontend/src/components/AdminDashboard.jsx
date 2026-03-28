@@ -22,6 +22,8 @@ const AdminDashboard = () => {
     const [electionEndDate, setElectionEndDate] = useState(null);
     const [newEndDate, setNewEndDate] = useState("");
     const [isEditingTimer, setIsEditingTimer] = useState(false);
+    const [candidateErrors, setCandidateErrors] = useState({});
+    const [candidateTouched, setCandidateTouched] = useState({});
 
     const navigate = useNavigate();
     const { language, t, partyTranslations } = useLanguage();
@@ -39,6 +41,56 @@ const AdminDashboard = () => {
     };
 
     const allPartiesData = getPartyData();
+
+    // Validation functions for candidate form
+    const validateCandidateName = (name) => {
+        if (!name) return "Candidate name is required";
+        if (name.trim().length < 3) return "Name must be at least 3 characters";
+        if (!/^[a-zA-Z\s]+$/.test(name)) return "Name can only contain letters and spaces";
+        return "";
+    };
+
+    const validateCandidateParty = (party) => {
+        if (!party) return "Party is required";
+        return "";
+    };
+
+    const validateCandidateAge = (age) => {
+        if (!age) return "Age is required";
+        const ageNum = parseInt(age);
+        if (isNaN(ageNum) || ageNum < 18 || ageNum > 100) return "Age must be between 18 and 100";
+        return "";
+    };
+
+    const validateCandidateDescription = (description) => {
+        if (description && description.length > 500) return "Description cannot exceed 500 characters";
+        return "";
+    };
+
+    const handleCandidateChange = (e) => {
+        const { name, value } = e.target;
+        setCandidateData({ ...candidateData, [name]: value });
+        
+        if (candidateTouched[name]) {
+            let error = "";
+            if (name === "name") error = validateCandidateName(value);
+            else if (name === "party") error = validateCandidateParty(value);
+            else if (name === "age") error = validateCandidateAge(value);
+            else if (name === "description") error = validateCandidateDescription(value);
+            setCandidateErrors({ ...candidateErrors, [name]: error });
+        }
+    };
+
+    const handleCandidateBlur = (e) => {
+        const { name, value } = e.target;
+        setCandidateTouched({ ...candidateTouched, [name]: true });
+        let error = "";
+        if (name === "name") error = validateCandidateName(value);
+        else if (name === "party") error = validateCandidateParty(value);
+        else if (name === "age") error = validateCandidateAge(value);
+        else if (name === "description") error = validateCandidateDescription(value);
+        setCandidateErrors({ ...candidateErrors, [name]: error });
+    };
 
     const getLeadingParty = () => {
         if (candidates.length === 0) return "N/A";
@@ -147,7 +199,26 @@ const AdminDashboard = () => {
     }, [user]);
 
     const handleAddCandidate = async () => {
-        if (!candidateData.name) return;
+        const nameError = validateCandidateName(candidateData.name);
+        const partyError = validateCandidateParty(candidateData.party);
+        const ageError = validateCandidateAge(candidateData.age);
+        const descriptionError = validateCandidateDescription(candidateData.description);
+
+        setCandidateErrors({
+            name: nameError,
+            party: partyError,
+            age: ageError,
+            description: descriptionError
+        });
+        setCandidateTouched({
+            name: true,
+            party: true,
+            age: true,
+            description: true
+        });
+
+        if (nameError || partyError || ageError || descriptionError) return;
+
         const token = localStorage.getItem("token");
         try {
             const method = isEditing ? "PUT" : "POST";
@@ -181,6 +252,8 @@ const AdminDashboard = () => {
         setCandidatePhoto(null);
         setIsEditing(false);
         setEditingId(null);
+        setCandidateErrors({});
+        setCandidateTouched({});
     };
 
     const handleDeleteCandidates = async () => {
@@ -413,31 +486,36 @@ const AdminDashboard = () => {
                             <div className="row g-3">
                                 <div className="col-md-6 col-12">
                                     <label className="form-label fw-bold small text-muted">{t.fullName}</label>
-                                    <input type="text" className="form-control rounded-pill border-0 shadow-sm p-2 p-md-3 text-app-dark" style={{ backgroundColor: 'var(--input-bg)', fontSize: '0.95rem' }} value={candidateData.name} onChange={(e) => setCandidateData({ ...candidateData, name: e.target.value })} placeholder="Enter Name" />
+                                    <input type="text" className={`form-control rounded-pill border-0 shadow-sm p-2 p-md-3 text-app-dark ${candidateErrors.name && candidateTouched.name ? 'border-danger border' : ''}`} style={{ backgroundColor: 'var(--input-bg)', fontSize: '0.95rem' }} value={candidateData.name} onChange={handleCandidateChange} onBlur={handleCandidateBlur} name="name" placeholder="Enter Name" />
+                                    {candidateErrors.name && candidateTouched.name && <span className="text-danger small mt-1 d-block"><i className="bi bi-exclamation-circle me-1"></i>{candidateErrors.name}</span>}
                                 </div>
                                 <div className="col-md-6 col-12">
                                     <label className="form-label fw-bold small text-muted">{t.partyName}</label>
-                                    <select className="form-select rounded-pill border-0 shadow-sm p-2 p-md-3 text-app-dark" style={{ backgroundColor: 'var(--input-bg)', fontSize: '0.95rem' }} value={candidateData.party} onChange={(e) => setCandidateData({ ...candidateData, party: e.target.value })}>
+                                    <select className={`form-select rounded-pill border-0 shadow-sm p-2 p-md-3 text-app-dark ${candidateErrors.party && candidateTouched.party ? 'border-danger border' : ''}`} style={{ backgroundColor: 'var(--input-bg)', fontSize: '0.95rem' }} value={candidateData.party} onChange={handleCandidateChange} onBlur={handleCandidateBlur} name="party">
                                         <option value="">Select Party</option>
                                         {allPartiesData.map((party, idx) => <option key={idx} value={party.nameEn}>{party.name}</option>)}
                                     </select>
+                                    {candidateErrors.party && candidateTouched.party && <span className="text-danger small mt-1 d-block"><i className="bi bi-exclamation-circle me-1"></i>{candidateErrors.party}</span>}
                                 </div>
                                 <div className="col-md-6 col-12">
                                     <label className="form-label fw-bold small text-muted">{t.age}</label>
-                                    <input type="number" className="form-control rounded-pill border-0 shadow-sm p-2 p-md-3 text-app-dark" style={{ backgroundColor: 'var(--input-bg)', fontSize: '0.95rem' }} value={candidateData.age} onChange={(e) => setCandidateData({ ...candidateData, age: e.target.value })} placeholder="Age" />
+                                    <input type="number" className={`form-control rounded-pill border-0 shadow-sm p-2 p-md-3 text-app-dark ${candidateErrors.age && candidateTouched.age ? 'border-danger border' : ''}`} style={{ backgroundColor: 'var(--input-bg)', fontSize: '0.95rem' }} value={candidateData.age} onChange={handleCandidateChange} onBlur={handleCandidateBlur} name="age" placeholder="Age" />
+                                    {candidateErrors.age && candidateTouched.age && <span className="text-danger small mt-1 d-block"><i className="bi bi-exclamation-circle me-1"></i>{candidateErrors.age}</span>}
                                 </div>
                                 <div className="col-md-6 col-12">
                                     <label className="form-label fw-bold small text-muted">{t.photo}</label>
-                                    <input type="file" className="form-control rounded-pill border-0 shadow-sm p-2 p-md-3 text-app-dark" style={{ backgroundColor: 'var(--input-bg)', fontSize: '0.95rem' }} onChange={(e) => setCandidatePhoto(e.target.files[0])} />
+                                    <input type="file" className="form-control rounded-pill border-0 shadow-sm p-2 p-md-3 text-app-dark" style={{ backgroundColor: 'var(--input-bg)', fontSize: '0.95rem' }} onChange={(e) => setCandidatePhoto(e.target.files[0])} accept="image/*" />
                                 </div>
                                 <div className="col-12">
                                     <label className="form-label fw-bold small text-muted">{t.manifesto}</label>
-                                    <textarea className="form-control rounded-4 border-0 shadow-sm p-2 p-md-3 text-app-dark" style={{ backgroundColor: 'var(--input-bg)', fontSize: '0.95rem' }} rows="3" value={candidateData.description} onChange={(e) => setCandidateData({ ...candidateData, description: e.target.value })} placeholder="Manifesto"></textarea>
+                                    <textarea className={`form-control rounded-4 border-0 shadow-sm p-2 p-md-3 text-app-dark ${candidateErrors.description && candidateTouched.description ? 'border-danger border' : ''}`} style={{ backgroundColor: 'var(--input-bg)', fontSize: '0.95rem' }} rows="3" value={candidateData.description} onChange={handleCandidateChange} onBlur={handleCandidateBlur} name="description" placeholder="Manifesto"></textarea>
+                                    {candidateErrors.description && candidateTouched.description && <span className="text-danger small mt-1 d-block"><i className="bi bi-exclamation-circle me-1"></i>{candidateErrors.description}</span>}
+                                    <div className="text-muted small mt-1">{candidateData.description.length}/500</div>
                                 </div>
                             </div>
                             <div className="d-flex gap-2 gap-md-3 mt-4">
                                 <button className="btn btn-light rounded-pill flex-grow-1 py-2 py-md-3 fw-bold border text-app-dark" data-bs-dismiss="modal">{t.cancel}</button>
-                                <button className="btn btn-primary rounded-pill flex-grow-1 py-2 py-md-3 fw-bold shadow-blue" onClick={handleAddCandidate}>{isEditing ? t.saveChanges : t.registerCandidate}</button>
+                                <button className="btn btn-primary rounded-pill flex-grow-1 py-2 py-md-3 fw-bold shadow-blue" onClick={handleAddCandidate} disabled={Object.values(candidateErrors).some(e => e) || !candidateData.name || !candidateData.party || !candidateData.age}>{isEditing ? t.saveChanges : t.registerCandidate}</button>
                             </div>
                         </div>
                     </div>
