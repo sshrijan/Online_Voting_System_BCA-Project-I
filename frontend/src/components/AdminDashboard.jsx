@@ -373,7 +373,7 @@ const AdminDashboard = () => {
                         <div key={candidate._id} className="col-12 col-md-6 col-lg-4">
                             <div className="card card-modern h-100 overflow-hidden">
                                 <div className="position-relative" style={{ height: '200px' }}>
-                                    <img src={candidate.candidatePhoto ? `http://localhost:3001${candidate.candidatePhoto}` : "men.jpg"} className="w-100 h-100 object-fit-cover" alt={candidate.name} />
+                                    <img src={candidate.candidatePhoto ? candidate.candidatePhoto : "admin.jpg"} className="w-100 h-100 object-fit-cover" alt={candidate.name} />
                                     <div className="position-absolute top-0 start-0 m-3">
                                         <input type="checkbox" className="form-check-input shadow-sm" style={{ width: '22px', height: '22px' }} checked={selectedCandidates.includes(candidate._id)} onChange={(e) => handleSelectCandidate(candidate._id, e.target.checked)} />
                                     </div>

@@ -204,9 +204,15 @@ const Vote = () => {
     }
   }, [user]);
 
-  const isElectionEnded = electionEndDate && new Date().getTime() > new Date(electionEndDate).getTime();
+  const isElectionNotStarted = !electionEndDate;
+  const isElectionEnded = !isElectionNotStarted && new Date().getTime() > new Date(electionEndDate).getTime();
+  const isVotingActive = !isElectionNotStarted && !isElectionEnded;
 
   const handleVote = async () => {
+    if (isElectionNotStarted) {
+      alert(t.voteNotStarted || "Voting has not started yet.");
+      return;
+    }
     if (isElectionEnded) {
       alert(t.timeEnded || "Election time has ended. You can no longer vote.");
       return;
@@ -525,7 +531,7 @@ const Vote = () => {
               <div className="dropdown">
                 <div className="d-flex align-items-center gap-2 dropdown-toggle bg-light bg-opacity-10 p-1 pe-3 rounded-pill border shadow-sm transition-all text-app-dark"
                   style={{ cursor: 'pointer' }} data-bs-toggle="dropdown" id="userDropdown">
-                  <img src={user.profileImage ? `http://localhost:3001${user.profileImage}` : "men.jpg"} alt="Avatar" className="rounded-circle shadow-sm avatar-size border border-2 border-white object-fit-cover" />
+                  <img src={user.profileImage ? user.profileImage : "admin.jpg"} alt="Avatar" className="rounded-circle shadow-sm avatar-size border border-2 border-white object-fit-cover" />
                   <div className="d-none d-md-block">
                     <div className="fw-bold small" style={{ lineHeight: 1.2 }}>{user.fullName?.split(' ')[0] || 'User'}</div>
                     <div className="text-app-muted" style={{ fontSize: '0.65rem' }}>{t.account}</div>
@@ -534,7 +540,7 @@ const Vote = () => {
                 </div>
                 <div className="dropdown-menu dropdown-menu-end profile-dropdown-menu mt-2 shadow-lg border-0">
                   <div className="profile-dropdown-header">
-                    <img src={user.profileImage ? `http://localhost:3001${user.profileImage}` : "men.jpg"} alt="Avatar" className="profile-dropdown-avatar" />
+                    <img src={user.profileImage ? user.profileImage : "admin.jpg"} alt="Avatar" className="profile-dropdown-avatar" />
                     <h5 className="fw-bold mb-0 text-white">{user.fullName || user.email}</h5>
                     <div className="badge rounded-pill bg-dark bg-opacity-20 text-white mt-2 px-3 py-1" style={{ fontSize: '0.7rem' }}>
                       {t.role}
@@ -600,11 +606,11 @@ const Vote = () => {
                 {candidates.length > 0 ? (
                   candidates.map((candidate) => (
                     <div key={candidate._id} className="col-12 col-md-4">
-                      <div className={`card card-modern h-100 ${selectedCandidate && selectedCandidate._id === candidate._id ? 'selected shadow-lg' : ''} ${isElectionEnded ? 'opacity-75' : ''}`}
-                        onClick={() => !isElectionEnded && setSelectedCandidate(candidate)}
-                        style={{ cursor: isElectionEnded ? 'not-allowed' : 'pointer' }}>
+                    <div className={`card card-modern h-100 ${selectedCandidate && selectedCandidate._id === candidate._id ? 'selected shadow-lg' : ''} ${!isVotingActive ? 'opacity-75' : ''}`}
+                        onClick={() => isVotingActive && setSelectedCandidate(candidate)}
+                        style={{ cursor: isVotingActive ? 'pointer' : 'not-allowed' }}>
                         <div className="position-relative">
-                          <img src={candidate.photo ? `http://localhost:3001${candidate.photo}` : "men.jpg"} className="card-img-top" style={{ height: "240px", objectFit: "cover" }} alt={candidate.name} />
+                          <img src={candidate.candidatePhoto ? candidate.candidatePhoto : "admin.jpg"} className="card-img-top" style={{ height: "240px", objectFit: "cover" }} alt={candidate.name} />
                           {selectedCandidate && selectedCandidate._id === candidate._id && (
                             <div className="position-absolute top-0 end-0 m-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-lg" style={{ width: '40px', height: '40px' }}>
                               <i className="bi bi-check-lg fs-4"></i>
@@ -627,13 +633,17 @@ const Vote = () => {
                             </div>
                           </div>
                           <button
-                            className={`btn ${isElectionEnded ? 'btn-secondary' : 'btn-primary'} w-100 rounded-pill py-2 fw-bold shadow-blue mt-2`}
+                            className={`btn ${
+                              isElectionEnded ? 'btn-secondary' :
+                              isElectionNotStarted ? 'btn-warning' :
+                              'btn-primary'
+                            } w-100 rounded-pill py-2 fw-bold shadow-blue mt-2`}
                             data-bs-toggle="modal"
-                            data-bs-target={isElectionEnded ? "" : "#confirmVoteModal"}
-                            onClick={() => !isElectionEnded && setSelectedCandidate(candidate)}
-                            disabled={isElectionEnded}
+                            data-bs-target={isVotingActive ? "#confirmVoteModal" : ""}
+                            onClick={() => isVotingActive && setSelectedCandidate(candidate)}
+                            disabled={!isVotingActive}
                           >
-                            {isElectionEnded ? t.timeEnded : t.castVote}
+                            {isElectionEnded ? t.timeEnded : isElectionNotStarted ? t.voteNotStarted : t.castVote}
                           </button>
                         </div>
                       </div>
@@ -650,15 +660,20 @@ const Vote = () => {
 
             <div className="text-center sticky-bottom pb-4" style={{ zIndex: 5 }}>
               <button
-                className={`btn ${isElectionEnded ? 'btn-secondary' : 'btn-primary'} rounded-pill px-5 py-3 fw-bold shadow-lg`}
+                className={`btn ${
+                isElectionEnded ? 'btn-secondary' :
+                isElectionNotStarted ? 'btn-warning' :
+                'btn-primary'
+              } rounded-pill px-5 py-3 fw-bold shadow-lg`}
                 data-bs-toggle="modal"
-                data-bs-target={isElectionEnded ? "" : "#confirmVoteModal"}
-                disabled={!selectedCandidate || isElectionEnded}
+                data-bs-target={isVotingActive ? "#confirmVoteModal" : ""}
+                disabled={!selectedCandidate || !isVotingActive}
               >
-                <i className="bi bi-send-fill me-2"></i> {isElectionEnded ? t.timeEnded : t.castMyVote}
+                <i className="bi bi-send-fill me-2"></i>{isElectionEnded ? t.timeEnded : isElectionNotStarted ? t.voteNotStarted : t.castMyVote}
               </button>
-              {(!selectedCandidate && !isElectionEnded) && <div className="mt-2 text-primary small fw-bold">Please select a candidate above</div>}
+              {(!selectedCandidate && isVotingActive) && <div className="mt-2 text-primary small fw-bold">{t.selectAbove}</div>}
               {isElectionEnded && <div className="mt-2 text-danger small fw-bold">{t.timeEnded}</div>}
+              {isElectionNotStarted && <div className="mt-2 text-warning small fw-bold">{t.voteNotStarted}</div>}
             </div>
           </main>
 
@@ -723,7 +738,7 @@ const Vote = () => {
 
                     <div className="mb-3 text-center">
                       <div className="position-relative d-inline-block">
-                        <img src={user.profileImage ? `http://localhost:3001${user.profileImage}` : "men.jpg"}
+                        <img src={user.profileImage ? user.profileImage : "admin.jpg"}
                           className="rounded-circle border border-4 border-white shadow-sm"
                           style={{ width: '100px', height: '100px', objectFit: 'cover' }} alt="Avatar" />
                         <label className="position-absolute bottom-0 end-0 bg-primary text-white p-2 rounded-circle cursor-pointer shadow-sm" style={{ width: '35px', height: '35px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

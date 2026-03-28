@@ -41,7 +41,9 @@ const Results = ({ isEmbedded = false, passedUser = null }) => {
     try {
       const response = await fetch("/api/candidates");
       const data = await response.json();
-      if (response.ok) setCandidates(Array.isArray(data) ? data : []);
+      if (response.ok) {
+        setCandidates(data.candidates || (Array.isArray(data) ? data : []));
+      }
     } catch (error) {
       console.error("Fetch candidates error:", error);
     }
@@ -136,7 +138,7 @@ const Results = ({ isEmbedded = false, passedUser = null }) => {
                   </td>
                   <td className="py-4">
                     <div className="d-flex align-items-center">
-                      <img src={c.candidatePhoto ? `http://localhost:3001${c.candidatePhoto}` : "men.jpg"} className="rounded-circle me-3 border shadow-sm object-fit-cover" style={{ width: "45px", height: "45px" }} alt="" />
+                      <img src={c.candidatePhoto ? c.candidatePhoto : "admin.jpg"} className="rounded-circle me-3 border shadow-sm object-fit-cover" style={{ width: "45px", height: "45px" }} alt="" />
                       <div className="fw-bold text-app-dark">{c.name}</div>
                     </div>
                   </td>

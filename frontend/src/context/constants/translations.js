@@ -84,7 +84,7 @@ export const translations = {
         home: 'Dashboard Home',
         castVote: 'Cast Your Vote',
         menu: 'Menu',
-        panel: 'Candidate Voting Panel',
+        panel: 'Online Voting System',
         ballotPaper: 'Ballot Paper',
         selectCandidate: 'Please select one candidate to cast your vote.',
         chooseCandidate: 'Choose Your Candidate',
@@ -94,6 +94,7 @@ export const translations = {
         castMyVote: 'Cast My Vote',
         noCandidates: 'No candidates found.',
         timeEnded: 'Voting Closed',
+        voteNotStarted: 'Voting Not Started',
         // User Dashboard
         welcome: 'Welcome',
         guidelines: 'Voting Guidelines',
@@ -202,7 +203,7 @@ export const translations = {
         home: 'ड्यासबोर्ड गृह',
         castVote: 'मतदान गर्नुहोस्',
         menu: 'मेनु',
-        panel: 'उम्मेदवार मतदान प्यानल',
+        panel: 'अनलाइन मतदान प्रणाली',
         ballotPaper: 'मतपत्र',
         selectCandidate: 'कृपया आफ्नो मतदान गर्न एक उम्मेदवार चयन गर्नुहोस्।',
         chooseCandidate: 'तपाइँको उम्मेदवार छान्नुहोस्',
@@ -212,6 +213,7 @@ export const translations = {
         castMyVote: 'मेरो भोट हाल्नुहोस्',
         noCandidates: 'कुनै उम्मेदवार फेला परेन।',
         timeEnded: 'मतदान बन्द भयो',
+        voteNotStarted: 'मतदान सुरु भएको छैन',
         // User Dashboard
         welcome: 'स्वागत छ',
         guidelines: 'मतदान दिशानिर्देशहरू',

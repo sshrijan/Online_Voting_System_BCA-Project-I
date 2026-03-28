@@ -23,7 +23,7 @@ const Sidebar = ({
                     <div className="sidebar-brand">
                         {role === 'admin' ? (
                             <>
-                                <i className="bi bi-person"></i>
+                                <i className="bi bi-shield-lock-fill"></i>
                                 <span className="text-white">Admin Panel</span>
                             </>
                         ) : (
@@ -46,19 +46,19 @@ const Sidebar = ({
                     {role === 'admin' ? (
                         <>
                             <button className={`nav-link-modern ${activeTab === 'home' ? 'active' : ''}`} onClick={() => { setActiveTab("home"); setSidebarOpen(false); }}>
-                                <i className="bi bi-bar-chart"></i> {t.dashboardHome}
+                                <i className="bi bi-house-fill fs-5"></i> Home
                             </button>
                             <button className={`nav-link-modern ${activeTab === 'results' ? 'active' : ''}`} onClick={() => { setActiveTab("results"); setSidebarOpen(false); }}>
-                                <i className="bi bi-pie-chart"></i> {t.electionResults}
+                                <i className="bi bi-graph-up-arrow fs-5"></i> {t.electionResults}
                             </button>
                         </>
                     ) : (
                         <>
                             <button className={`nav-link-modern ${activeTab === 'home' ? 'active' : ''}`} onClick={() => { setActiveTab("home"); setSidebarOpen(false); }}>
-                                <i className="bi bi-grid-fill fs-5"></i> {t.home}
+                                <i className="bi bi-house-fill fs-5"></i> Home
                             </button>
                             <button className={`nav-link-modern ${activeTab === 'vote' ? 'active' : ''}`} onClick={() => { navigate("/vote"); setSidebarOpen(false); }}>
-                                <i className="bi bi-patch-check-fill fs-5"></i> {t.castVote}
+                                <i className="bi bi-pencil-square fs-5"></i> {t.castVote}
                             </button>
                             <button className={`nav-link-modern ${activeTab === 'results' ? 'active' : ''}`} onClick={() => { setActiveTab("results"); setSidebarOpen(false); }}>
                                 <i className="bi bi-bar-chart-fill fs-5"></i> {t.results}
@@ -84,17 +84,7 @@ const Sidebar = ({
                     )}
                 </div>
 
-                {role === 'admin' && (
-                    <div className="position-absolute bottom-0 w-100 p-4 border-top border-white border-opacity-5">
-                        <div className="d-flex align-items-center gap-3">
-                            <img src="admin.jpg" className="rounded-circle border border-2 border-white border-opacity-10" style={{ width: '40px', height: '40px', objectFit: 'cover' }} alt="admin" />
-                            <div className="overflow-hidden">
-                                <div className="fw-bold text-truncate text-white" style={{ fontSize: '0.85rem' }}>{t.administrator}</div>
-                                <div className="text-white-50" style={{ fontSize: '0.7rem' }}>{t.fullAccess}</div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                
             </aside>
         </>
     );

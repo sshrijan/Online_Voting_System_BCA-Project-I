@@ -170,7 +170,7 @@ const Dashboard = () => {
                     </div>
                     {votedCandidate ? (
                       <div className="d-flex align-items-center p-3 bg-white bg-opacity-10 rounded-4 shadow-sm">
-                        <img src={votedCandidate.candidatePhoto ? `http://localhost:3001${votedCandidate.candidatePhoto}` : "men.jpg"} className="rounded-circle me-3 avatar-size" alt="voted" />
+                        <img src={votedCandidate.candidatePhoto ? votedCandidate.candidatePhoto : "admin.jpg"} className="rounded-circle me-3 avatar-size" alt="voted" />
                         <div>
                           <div className="small text-app-muted">{t.votedFor}:</div>
                           <div className="fw-bold text-app-dark">{votedCandidate.name}</div>
@@ -268,7 +268,7 @@ const Dashboard = () => {
                   {filteredCandidates.slice(0, 5).map(c => (
                     <tr key={c._id}>
                       <td className="px-4">
-                        <img src={c.candidatePhoto ? `http://localhost:3001${c.candidatePhoto}` : "men.jpg"} className="rounded-circle border" style={{ width: '40px', height: '40px', objectFit: 'cover' }} alt="" />
+                    <img src={c.candidatePhoto ? c.candidatePhoto : "admin.jpg"} className="rounded-circle border" style={{ width: '50px', height: '50px', objectFit: 'cover' }} alt="" />
                       </td>
                       <td className="fw-bold">{c.name}</td>
                       <td><span className="badge bg-light text-dark border rounded-pill px-3 py-1 fw-normal">{partyTranslations[language][c.party] || c.party}</span></td>
@@ -283,7 +283,7 @@ const Dashboard = () => {
               {filteredCandidates.slice(0, 5).map(c => (
                 <div key={c._id} className="p-3 border rounded-4 mb-2 shadow-sm bg-card">
                   <div className="d-flex align-items-center gap-3">
-                    <img src={c.candidatePhoto ? `http://localhost:3001${c.candidatePhoto}` : "men.jpg"} className="rounded-circle border" style={{ width: '50px', height: '50px', objectFit: 'cover' }} alt="" />
+                    <img src={c.candidatePhoto ? c.candidatePhoto : "admin.jpg"} className="rounded-circle border" style={{ width: '50px', height: '50px', objectFit: 'cover' }} alt="" />
                     <div className="flex-grow-1">
                       <h6 className="fw-bold mb-1 text-app-dark">{c.name}</h6>
                       <span className="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-1" style={{ fontSize: '0.7rem' }}>

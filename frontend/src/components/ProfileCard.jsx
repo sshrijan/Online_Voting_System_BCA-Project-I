@@ -251,7 +251,7 @@ const ProfileCard = ({
                                     <div className="mb-3">
                                         <label className="form-label small fw-bold text-app-muted">{t.currentPassword}</label>
                                         <div className="position-relative">
-                                            <input type={showPasswords.current ? "text" : "password"} className="form-control rounded-pill bg-light border-0 px-4 pe-5" placeholder="••••••••" value={passwordFormData.currentPassword} onChange={(e) => setPasswordFormData({ ...passwordFormData, currentPassword: e.target.value })} />
+                                            <input type={showPasswords.current ? "text" : "password"} className="form-control rounded-pill bg-light border-0 px-4 pe-5" placeholder="Enter Current Password" value={passwordFormData.currentPassword} onChange={(e) => setPasswordFormData({ ...passwordFormData, currentPassword: e.target.value })} />
                                             <button type="button" className="btn position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent text-muted me-2" onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}>
                                                 <i className={`bi ${showPasswords.current ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
                                             </button>
