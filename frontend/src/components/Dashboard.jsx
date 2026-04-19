@@ -207,7 +207,7 @@ const Dashboard = () => {
                   </div>
                   <div className="d-flex gap-3 gap-md-4 overflow-auto pb-3 custom-scrollbar">
                     {majorPartiesData.map((party, idx) => (
-                      <div key={idx} className="party-card text-center text-nowrap p-3 rounded-4 border shadow-sm flex-shrink-0" style={{ minWidth: '130px' }}>
+                      <div key={idx} className="party-card text-center text-nowrap p-3 rounded-4 border shadow-sm flex-shrink-0 " style={{ minWidth: '130px' }}>
                         <div className="party-logo-container shadow-sm">
                           <img src={party.logo} alt={party.name} className="party-logo-img" />
                         </div>
