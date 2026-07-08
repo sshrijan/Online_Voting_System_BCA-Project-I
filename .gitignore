@@ -23,8 +23,4 @@
 # *.sln
 # *.sw?
 
-
-# Environment variables
-.env
-.env.local
-.env.*.local
+/backend/.env
